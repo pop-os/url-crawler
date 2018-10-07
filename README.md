@@ -51,6 +51,7 @@ Html {
 ...
 File {
     url: "http://apt.pop-os.org/proprietary/pool/bionic/main/binary-amd64/a/atom/atom_1.30.0_amd64.deb",
+    content_type: "application/octet-stream",
     length: 87689398,
     modified: Some(
         2018-09-25T17:54:39+00:00
@@ -58,6 +59,7 @@ File {
 }
 File {
     url: "http://apt.pop-os.org/proprietary/pool/bionic/main/binary-amd64/a/atom/atom_1.31.1_amd64.deb",
+    content_type: "application/octet-stream",
     length: 90108020,
     modified: Some(
         2018-10-03T22:29:15+00:00

@@ -35,21 +35,19 @@
 extern crate bitflags;
 extern crate chrono;
 extern crate crossbeam_channel;
-extern crate failure;
-#[macro_use]
-extern crate failure_derive;
 extern crate reqwest;
 extern crate url_scraper;
 
 mod scraper;
 
 pub use reqwest::{Url, header};
+use channel::Receiver;
 use chrono::{DateTime, FixedOffset};
 use crossbeam_channel as channel;
-use channel::Receiver;
 use reqwest::Client;
 use reqwest::header::*;
 use scraper::Scraper;
+use std::fmt;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::thread;
@@ -205,7 +203,7 @@ impl Crawler {
                                 .and_then(|c| c.to_str().ok())
                                 .and_then(|c| DateTime::parse_from_rfc2822(c).ok());
 
-                            output_tx.send(UrlEntry::File { url, length, modified });
+                            output_tx.send(UrlEntry::File { url, length, modified, content_type: content_type.into() });
                         }
                     }
 
@@ -282,7 +280,7 @@ pub enum UrlEntry {
     /// A URL with the "text/html" content type
     Html { url: Url },
     /// All other detected content.
-    File { url: Url, length: u64, modified: Option<DateTime<FixedOffset>> }
+    File { url: Url, content_type: String, length: u64, modified: Option<DateTime<FixedOffset>> }
 }
 
 /// Convenience function for getting the filename from a URL.
@@ -294,12 +292,19 @@ pub fn filename_from_url(url: &str) -> &str {
     }
 }
 
-#[derive(Debug, Fail)]
+#[derive(Debug)]
 pub enum Error {
-    #[fail(display = "error while scraping a page: {}", why)]
     Scraper { why: url_scraper::Error },
-    #[fail(display = "error while requesting content: {}", why)]
     Request { why: reqwest::Error }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "error while {}", match *self {
+            Error::Scraper { ref why } => format!("scraping a page: {}", why),
+            Error::Request { ref why } => format!("requesting content: {}", why),
+        })
+    }
 }
 
 impl From<url_scraper::Error> for Error {

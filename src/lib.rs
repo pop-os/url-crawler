@@ -91,6 +91,7 @@ impl Crawler {
 
         // Thread for scraping urls and avoiding repeats.
         let status = state.clone();
+        let client = client_.clone();
         thread::spawn(move || {
             let mut visited = Vec::new();
             loop {
@@ -106,7 +107,7 @@ impl Crawler {
                     }
                 };
 
-                if let Ok(scraper) = UrlScraper::new(&url) {
+                if let Ok(scraper) = UrlScraper::new_with_client(&url, &client) {
                     for url in Scraper::new(scraper.into_iter(), &url, &mut visited, flags) {
                         fetcher_tx.send(url);
                     }

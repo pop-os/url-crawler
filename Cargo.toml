@@ -1,12 +1,16 @@
 [package]
 name = "url-crawler"
 version = "0.1.0"
+description = "Configurable parallel web crawler, designed to crawl for content"
+repository = "https://github.com/pop-os/url-crawler"
 authors = ["Michael Aaron Murphy <mmstickman@gmail.com>"]
 license = "MIT"
 readme = "README.md"
+keywords = ["url", "web", "crawler"]
+categories = ["web-programming"]
 
 [dependencies]
-url-scraper = { git = "https://github.com/pop-os/url-scraper" }
+url-scraper = "0.1.0"
 reqwest = "0.9.2"
 chrono = "0.4.6"
 failure = "0.1.2"

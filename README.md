@@ -6,6 +6,7 @@ A configurable parallel web crawler, designed to crawl a website for content.
 
 ```rust
 extern crate url_crawler;
+use std::sync::Arc;
 use url_crawler::*;
 
 /// Function for filtering content in the crawler before a HEAD request.
@@ -22,7 +23,7 @@ pub fn main() {
         // Use four threads for fetching
         .threads(4)
         // Check if a URL matches this filter before performing a HEAD request on it.
-        .pre_fetch(apt_filter)
+        .pre_fetch(Arc::new(apt_filter))
         // Initialize the crawler and begin crawling. This returns immediately.
         .crawl();
 

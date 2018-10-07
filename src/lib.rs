@@ -64,6 +64,10 @@ bitflags! {
     }
 }
 
+pub type ErrorsCallback = Arc<Fn(Error) -> bool + Send + Sync>;
+pub type PreFetchCallback = Arc<Fn(&Url) -> bool + Send + Sync>;
+pub type PostFetchCallback = Arc<Fn(&Url, &HeaderMap) -> bool + Send + Sync>;
+
 /// A configurable parallel web crawler.
 /// 
 /// Crawling does not occur until this type is consumed by the `crawl` method.
@@ -71,9 +75,9 @@ pub struct Crawler {
     url: String,
     threads: usize,
     flags: Flags,
-    errors: fn(Error) -> bool,
-    pre_fetch: fn(&Url) -> bool,
-    post_fetch: fn(&Url, &HeaderMap) -> bool,
+    errors: ErrorsCallback,
+    pre_fetch: PreFetchCallback,
+    post_fetch: PostFetchCallback,
 }
 
 impl Crawler {
@@ -83,9 +87,9 @@ impl Crawler {
             url,
             threads: 4,
             flags: Flags::empty(),
-            errors: |_| true,
-            pre_fetch: |_| true,
-            post_fetch: |_, _| true,
+            errors: Arc::new(|_| true),
+            pre_fetch: Arc::new(|_| true),
+            post_fetch: Arc::new(|_, _| true),
         }
     }
 
@@ -109,7 +113,7 @@ impl Crawler {
     /// 
     /// # Notes
     /// Returning `false` will stop the crawler.
-    pub fn errors(mut self, errors: fn(error: Error) -> bool) -> Self {
+    pub fn errors(mut self, errors: ErrorsCallback) -> Self {
         self.errors = errors;
         self
     }
@@ -118,7 +122,7 @@ impl Crawler {
     /// 
     /// # Notes
     /// Returning `false` will prevent the item from being fetched.
-    pub fn pre_fetch(mut self, pre_fetch: fn(url: &Url) -> bool) -> Self {
+    pub fn pre_fetch(mut self, pre_fetch: PreFetchCallback) -> Self {
         self.pre_fetch = pre_fetch;
         self
     }
@@ -127,7 +131,7 @@ impl Crawler {
     /// 
     /// # Notes
     /// Returning `false` will prevent the item from being scraped / returned.
-    pub fn post_fetch(mut self, post_fetch: fn(url: &Url, headers: &HeaderMap) -> bool) -> Self {
+    pub fn post_fetch(mut self, post_fetch: PostFetchCallback) -> Self {
         self.post_fetch = post_fetch;
         self
     }
@@ -158,6 +162,9 @@ impl Crawler {
             let output_tx = output_tx.clone();
             let status = state.clone();
             let kill = kill.clone();
+            let pre_fetch = pre_fetch.clone();
+            let post_fetch = post_fetch.clone();
+            let errors = errors.clone();
             thread::spawn(move || {
                 status.fetch_add(1, Ordering::SeqCst);
                 for url in fetcher {

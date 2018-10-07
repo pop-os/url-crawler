@@ -1,3 +1,7 @@
+# 0.2.0
+
+- Switch to using `Arc<Fn()>` callbacks instead of function pointers.
+
 # 0.1.1
 
 - Remove dependency on the failure crates

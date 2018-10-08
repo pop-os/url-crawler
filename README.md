@@ -13,7 +13,7 @@ use std::sync::Arc;
 use url_crawler::*;
 
 /// Function for filtering content in the crawler before a HEAD request.
-/// 
+///
 /// Only allow directory entries, and files that have the `deb` extension.
 fn apt_filter(url: &Url) -> bool {
     let url = url.as_str();
@@ -22,7 +22,7 @@ fn apt_filter(url: &Url) -> bool {
 
 pub fn main() {
     // Create a crawler designed to crawl the given website.
-    let crawler = Crawler::new("http://apt.pop-os.org/".into())
+    let crawler = Crawler::new("http://apt.pop-os.org/".to_owned())
         // Use four threads for fetching
         .threads(4)
         // Check if a URL matches this filter before performing a HEAD request on it.

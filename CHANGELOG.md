@@ -1,3 +1,19 @@
+# 0.3.0
+
+- Allow scraping from multiple URLs in the same crawler.
+
+```rust
+// This
+fn new(url: String) -> Self {}
+
+// Now becomes
+fn new(urls: impl Into<CrawlerSource>) -> Self {}
+
+// Which enables
+Crawler::new(vec!["url1".into(), "url2".into()]);
+Crawler::new("url".to_owned());
+```
+
 # 0.2.1
 
 - The `PreFetchCallback` was not being called before fetching HEAD requests.

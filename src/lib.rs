@@ -5,6 +5,7 @@
 //! ```rust,no_run
 //! extern crate url_crawler;
 //! use url_crawler::*;
+//! use std::sync::Arc;
 //! 
 //! /// Function for filtering content in the crawler before a HEAD request.
 //! /// 
@@ -16,11 +17,11 @@
 //! 
 //! pub fn main() {
 //!     // Create a crawler designed to crawl the given website.
-//!     let crawler = Crawler::new("http://apt.pop-os.org/".into())
+//!     let crawler = Crawler::new("http://apt.pop-os.org/".to_owned())
 //!         // Use four threads for fetching
 //!         .threads(4)
 //!         // Check if a URL matches this filter before performing a HEAD request on it.
-//!         .pre_fetch(apt_filter)
+//!         .pre_fetch(Arc::new(apt_filter))
 //!         // Initialize the crawler and begin crawling. This returns immediately.
 //!         .crawl();
 //! 
@@ -68,11 +69,53 @@ pub type ErrorsCallback = Arc<Fn(Error) -> bool + Send + Sync>;
 pub type PreFetchCallback = Arc<Fn(&Url) -> bool + Send + Sync>;
 pub type PostFetchCallback = Arc<Fn(&Url, &HeaderMap) -> bool + Send + Sync>;
 
+/// Defines whether to crawl from a single source, or from multiple sources.
+/// 
+/// Both the `From<String>` and `From<Vec<String>>` traits are implemented for this.
+/// 
+/// ```rust
+/// use url_crawler::CrawlerSource;
+/// 
+/// let single: String = "url".into();
+/// let multiple: Vec<String> = vec![
+///     "url1".into(),
+///     "url2".into()
+/// ];
+/// 
+/// // Get a source from a `String`.
+/// let source: CrawlerSource = single.into();
+/// assert_eq!(CrawlerSource::Single("url".into()), source);
+/// 
+/// // Get a source from a `Vec<String>`.
+/// let source: CrawlerSource = multiple.into();
+/// assert_eq!(
+///     CrawlerSource::Multiple(vec!["url1".into(), "url2".into()]),
+///     source
+/// );
+/// ```
+#[derive(Debug, Clone, PartialEq)]
+pub enum CrawlerSource {
+    Single(String),
+    Multiple(Vec<String>)
+}
+
+impl From<String> for CrawlerSource {
+    fn from(s: String) -> Self {
+        CrawlerSource::Single(s)
+    }
+}
+
+impl From<Vec<String>> for CrawlerSource {
+    fn from(s: Vec<String>) -> Self {
+        CrawlerSource::Multiple(s)
+    }
+}
+
 /// A configurable parallel web crawler.
 /// 
 /// Crawling does not occur until this type is consumed by the `crawl` method.
 pub struct Crawler {
-    url: String,
+    urls: CrawlerSource,
     threads: usize,
     flags: Flags,
     errors: ErrorsCallback,
@@ -82,9 +125,9 @@ pub struct Crawler {
 
 impl Crawler {
     /// Initializes a new crawler with a default thread count of `4`.
-    pub fn new(url: String) -> Self {
+    pub fn new(source: impl Into<CrawlerSource>) -> Self {
         Crawler {
-            url,
+            urls: source.into(),
             threads: 4,
             flags: Flags::empty(),
             errors: Arc::new(|_| true),
@@ -153,7 +196,13 @@ impl Crawler {
         let (output_tx, output_rx) = channel::bounded::<UrlEntry>(threads * 4);
         let state = Arc::new(AtomicUsize::new(0));
         let kill = Arc::new(AtomicBool::new(false));
-        scraper_tx.send(self.url);
+
+        match self.urls {
+            CrawlerSource::Single(url) => scraper_tx.send(url),
+            CrawlerSource::Multiple(urls) => for url in urls {
+                scraper_tx.send(url);
+            }
+        }
 
         for _ in 0..threads {
             let fetcher = fetcher_rx.clone();

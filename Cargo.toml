@@ -1,6 +1,6 @@
 [package]
 name = "url-crawler"
-version = "0.2.1"
+version = "0.3.0"
 description = "Configurable parallel web crawler, designed to crawl for content"
 repository = "https://github.com/pop-os/url-crawler"
 authors = ["Michael Aaron Murphy <mmstickman@gmail.com>"]

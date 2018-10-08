@@ -12,7 +12,7 @@ fn apt_filter(url: &Url) -> bool {
 
 pub fn main() {
     // Create a crawler designed to crawl the given website.
-    let crawler = Crawler::new("http://apt.pop-os.org/".into())
+    let crawler = Crawler::new("http://apt.pop-os.org/".to_owned())
         // Use four threads for fetching
         .threads(4)
         // Check if a URL matches this filter before performing a HEAD request on it.

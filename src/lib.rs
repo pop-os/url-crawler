@@ -173,6 +173,11 @@ impl Crawler {
                         break
                     }
 
+                    if ! (pre_fetch)(&url) {
+                        status.fetch_add(1, Ordering::SeqCst);
+                        continue
+                    }
+
                     let head = match client.head(url.clone()).send() {
                         Ok(head) => head,
                         Err(why) => {
@@ -183,11 +188,6 @@ impl Crawler {
                             continue
                         }
                     };
-
-                    if ! (pre_fetch)(&url) {
-                        status.fetch_add(1, Ordering::SeqCst);
-                        continue
-                    }
 
                     let headers = head.headers();
 

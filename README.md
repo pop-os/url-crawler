@@ -2,6 +2,9 @@
 
 A configurable parallel web crawler, designed to crawl a website for content.
 
+- [Changelog](./CHANGELOG.md)
+- [Docs.rs](https://docs.rs/url-crawler)
+
 ## Example
 
 ```rust

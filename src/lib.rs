@@ -65,9 +65,9 @@ bitflags! {
     }
 }
 
-pub type ErrorsCallback = Arc<Fn(Error) -> bool + Send + Sync>;
-pub type PreFetchCallback = Arc<Fn(&Url) -> bool + Send + Sync>;
-pub type PostFetchCallback = Arc<Fn(&Url, &HeaderMap) -> bool + Send + Sync>;
+pub type ErrorsCallback = Arc<dyn Fn(Error) -> bool + Send + Sync>;
+pub type PreFetchCallback = Arc<dyn Fn(&Url) -> bool + Send + Sync>;
+pub type PostFetchCallback = Arc<dyn Fn(&Url, &HeaderMap) -> bool + Send + Sync>;
 
 /// Defines whether to crawl from a single source, or from multiple sources.
 /// 
